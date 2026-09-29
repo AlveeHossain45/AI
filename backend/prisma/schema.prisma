@@ -1,0 +1,292 @@
+// NovaAI Prisma schema
+// PostgreSQL + pgvector (vector embeddings live in the `embeddings` table).
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+  extensions      = [vector]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum DocumentStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum FeedbackRating {
+  LIKE
+  DISLIKE
+}
+
+enum TokenPurpose {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+enum SettingScope {
+  GLOBAL
+  USER
+}
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  email           String    @unique
+  passwordHash    String?
+  name            String?
+  avatarUrl       String?
+  role            UserRole  @default(USER)
+  emailVerifiedAt DateTime?
+  googleId        String?   @unique
+  lastLoginAt     DateTime?
+  isSuspended     Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  conversations   Conversation[]
+  documents       Document[]
+  folders         Folder[]
+  feedback        Feedback[]
+  usage           ApiUsage[]
+  settings        Setting[]
+  tokens          VerificationToken[]
+  searchQueries   SearchQuery[]
+
+  @@map("users")
+}
+
+model Folder {
+  id           String         @id @default(uuid()) @db.Uuid
+  userId       String         @db.Uuid
+  name         String
+  color        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@index([userId])
+  @@map("folders")
+}
+
+model Conversation {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  folderId  String?   @db.Uuid
+  title     String    @default("New chat")
+  summary   String?
+  archived  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder     Folder?      @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  messages   Message[]
+  documents  Document[]
+  searchQueries SearchQuery[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@index([folderId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String      @id @default(uuid()) @db.Uuid
+  conversationId String      @db.Uuid
+  role           MessageRole
+  content        String
+  metadata       Json?
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  feedback     Feedback[]
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model Document {
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String         @db.Uuid
+  conversationId String?
+  filename      String
+  mimeType      String
+  sizeBytes     Int
+  storagePath   String
+  status        DocumentStatus @default(PROCESSING)
+  error         String?
+  pageCount     Int?
+  charCount     Int?
+  chunkCount    Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation?   @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  chunks       DocumentChunk[]
+  embeddings   Embedding[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("documents")
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid()) @db.Uuid
+  documentId String   @db.Uuid
+  idx        Int
+  content    String
+  tokenCount Int      @default(0)
+  pageNumber Int?
+  createdAt  DateTime @default(now())
+
+  document   Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  embedding  Embedding?
+
+  @@index([documentId, idx])
+  @@map("document_chunks")
+}
+
+// One vector row per chunk. The vector column requires the pgvector extension.
+model Embedding {
+  id          String   @id @default(uuid()) @db.Uuid
+  chunkId     String   @unique @db.Uuid
+  documentId  String   @db.Uuid
+  model       String
+  dimensions  Int
+  vector      Unsupported("vector")?
+  contentHash String
+  createdAt   DateTime @default(now())
+
+  chunk  DocumentChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  document Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@map("embeddings")
+}
+
+model SearchQuery {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String?  @db.Uuid
+  conversationId String?  @db.Uuid
+  mode           String
+  query          String
+  provider       String?
+  resultCount    Int      @default(0)
+  latencyMs      Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  results      SearchResult[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([conversationId])
+  @@map("search_queries")
+}
+
+model SearchResult {
+  id            String  @id @default(uuid()) @db.Uuid
+  searchQueryId String  @db.Uuid
+  provider      String
+  url           String
+  title         String
+  snippet       String?
+  content       String?
+  domain        String?
+  rank          Int     @default(0)
+  score         Float?
+  fetchedAt     DateTime @default(now())
+
+  searchQuery SearchQuery @relation(fields: [searchQueryId], references: [id], onDelete: Cascade)
+
+  @@index([searchQueryId, rank])
+  @@map("search_results")
+}
+
+model ApiUsage {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String?  @db.Uuid
+  endpoint         String
+  provider         String?
+  model            String?
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  latencyMs        Int      @default(0)
+  status           String   @default("ok")
+  errorCode        String?
+  estimatedCost    Float    @default(0)
+  metadata         Json?
+  createdAt        DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([provider, createdAt(sort: Desc)])
+  @@map("api_usage")
+}
+
+model Feedback {
+  id        String         @id @default(uuid()) @db.Uuid
+  userId    String?        @db.Uuid
+  messageId String         @db.Uuid
+  rating    FeedbackRating
+  comment   String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  message Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([createdAt(sort: Desc)])
+  @@map("feedback")
+}
+
+model Setting {
+  id        String        @id @default(uuid()) @db.Uuid
+  key       String
+  userId    String?       @db.Uuid
+  scope     SettingScope  @default(GLOBAL)
+  value     Json
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([key, userId, scope])
+  @@index([scope, key])
+  @@map("settings")
+}
+
+model VerificationToken {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @db.Uuid
+  purpose   TokenPurpose
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash, purpose])
+  @@index([userId, purpose])
+  @@map("verification_tokens")
+}

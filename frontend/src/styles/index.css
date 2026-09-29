@@ -1,0 +1,215 @@
+@import 'katex/dist/katex.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased dark:bg-surface-dark dark:text-slate-200;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  * {
+    @apply border-slate-200 dark:border-white/10;
+  }
+  ::selection {
+    @apply bg-brand-500/25 text-slate-900 dark:text-white;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500/60 ring-offset-2 ring-offset-white dark:ring-offset-surface-dark;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply border border-white/60 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04];
+  }
+  .card {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-soft dark:border-white/10 dark:bg-surface-dark-2;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
+      active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-glow hover:from-brand-400 hover:to-brand-600;
+  }
+  .btn-ghost {
+    @apply btn text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5;
+  }
+  .btn-outline {
+    @apply btn border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50
+      dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10;
+  }
+  .input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400
+      focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20
+      dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:placeholder:text-slate-500;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-600 dark:text-slate-300;
+  }
+}
+
+/* ---------------- Scrollbars ---------------- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-slate-300/70 dark:bg-white/10;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-white/20;
+}
+
+/* ---------------- Markdown answer ---------------- */
+.answer-body {
+  @apply text-[15px] leading-7 text-slate-700 dark:text-slate-300;
+}
+.answer-body > * + * {
+  @apply mt-4;
+}
+.answer-body h1,
+.answer-body h2,
+.answer-body h3,
+.answer-body h4 {
+  @apply mt-7 font-semibold tracking-tight text-slate-900 dark:text-white;
+}
+.answer-body h1 {
+  @apply text-2xl;
+}
+.answer-body h2 {
+  @apply text-xl;
+}
+.answer-body h3 {
+  @apply text-lg;
+}
+.answer-body a {
+  @apply font-medium text-brand-600 underline decoration-brand-500/40 underline-offset-2 hover:decoration-brand-500
+    dark:text-brand-300;
+}
+.answer-body ul,
+.answer-body ol {
+  @apply list-disc space-y-1.5 pl-6;
+}
+.answer-body ol {
+  @apply list-decimal;
+}
+.answer-body li::marker {
+  @apply text-slate-400;
+}
+.answer-body blockquote {
+  @apply rounded-xl border-l-4 border-brand-400/70 bg-brand-50/60 px-4 py-2 text-slate-600 italic
+    dark:bg-brand-500/10 dark:text-slate-300;
+}
+.answer-body code {
+  @apply rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] text-pink-600 dark:bg-white/10 dark:text-pink-300;
+}
+.answer-body pre {
+  @apply overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-black/40;
+}
+.answer-body pre code {
+  @apply bg-transparent p-0 text-slate-800 dark:text-slate-200;
+}
+.answer-body table {
+  @apply w-full overflow-hidden rounded-xl border-collapse text-sm;
+}
+.answer-body th {
+  @apply border-b border-slate-200 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200;
+}
+.answer-body td {
+  @apply border-b border-slate-100 px-3 py-2 dark:border-white/5;
+}
+.answer-body hr {
+  @apply border-slate-200 dark:border-white/10;
+}
+.answer-body img {
+  @apply rounded-xl;
+}
+.answer-body .katex-display {
+  @apply my-4 overflow-x-auto overflow-y-hidden py-1;
+}
+
+/* ---------------- Highlight.js themes (rehype-highlight) ---------------- */
+.hljs-comment,
+.hljs-quote {
+  @apply text-slate-400 italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type {
+  @apply text-violet-500 dark:text-violet-300;
+}
+.hljs-string,
+.hljs-meta .hljs-string,
+.hljs-regexp {
+  @apply text-emerald-600 dark:text-emerald-300;
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  @apply text-amber-600 dark:text-amber-300;
+}
+.hljs-title,
+.hljs-name,
+.hljs-section,
+.hljs-title.function_ {
+  @apply text-sky-600 dark:text-sky-300;
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable {
+  @apply text-cyan-700 dark:text-cyan-300;
+}
+.hljs-built_in,
+.hljs-class .hljs-title {
+  @apply text-teal-600 dark:text-teal-300;
+}
+.hljs-meta {
+  @apply text-slate-500;
+}
+
+/* Code block copy button placement */
+.code-block {
+  @apply relative;
+}
+.code-block .copy-btn {
+  @apply absolute right-2 top-2 rounded-lg border border-white/10 bg-white/90 px-2 py-1 text-xs font-medium text-slate-600 opacity-0
+    transition hover:bg-white dark:bg-white/10 dark:text-slate-200 dark:hover:bg-white/20;
+}
+.code-block:hover .copy-btn {
+  @apply opacity-100;
+}
+
+/* Skeleton loader */
+.skeleton {
+  @apply relative overflow-hidden rounded-lg bg-slate-200/80 dark:bg-white/10;
+}
+.skeleton::after {
+  content: '';
+  @apply absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-white/10;
+}
+
+/* Typing caret for streamed text */
+.streaming-caret::after {
+  content: '';
+  @apply ml-0.5 inline-block h-4 w-[2px] animate-pulseSoft bg-brand-500 align-middle;
+}

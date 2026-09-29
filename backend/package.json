@@ -1,0 +1,44 @@
+{
+  "name": "@novaai/backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:validate": "prisma validate",
+    "prisma:studio": "prisma studio",
+    "seed": "node prisma/seed.js",
+    "verify": "node scripts/verify.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.5.0",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.5",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.9.0",
+    "multer": "^2.0.1",
+    "pdf-parse": "^1.1.1",
+    "zod": "^3.24.2",
+    "nodemailer": "^6.9.16"
+  },
+  "devDependencies": {
+    "prisma": "^6.5.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
