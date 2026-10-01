@@ -15,6 +15,17 @@ pipeline, and the answer cites whatever sources were actually used.
 
 ---
 
+## Screenshots
+
+> **Placeholder** — capture the app and save images under `screenshots/`, then replace the paths below.
+
+```md
+![Answer view](screenshots/answer-view.png)
+![Knowledge base](screenshots/knowledge-base.png)
+```
+
+---
+
 ## Table of contents
 
 1. [Features](#features)
